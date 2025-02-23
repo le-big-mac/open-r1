@@ -5,6 +5,7 @@ PatchFastRL("GRPO", FastLanguageModel)
 
 from unsloth import is_bfloat16_supported
 import torch
+import wandb
 max_seq_length = 1024 # Can increase for longer reasoning traces
 lora_rank = 64 # Larger rank = smarter, but slower
 
@@ -32,6 +33,12 @@ model = FastLanguageModel.get_peft_model(
 model.config.latent_thinking = True
 model.config.bot_token_id = tokenizer.convert_tokens_to_ids("<think>")
 model.config.eot_token_id = tokenizer.convert_tokens_to_ids("</think>")
+
+wandb.init(
+    project="GRPO-training",   # Change to your project name
+    name="Qwen2.5-GRPO",       # Custom run name
+    config=model.config.to_dict()  # Log hyperparameters
+)
 
 """### Data Prep
 <a name="Data"></a>
@@ -159,8 +166,9 @@ training_args = GRPOConfig(
     max_steps = 250,
     save_steps = 250,
     max_grad_norm = 0.1,
-    report_to = "none", # Can use Weights & Biases
+    report_to = "wandb", # Can use Weights & Biases
     output_dir = "outputs",
+    logging_steps = 1,
 )
 
 """And let's run the trainer! If you scroll up, you'll see a table of rewards. The goal is to see the `reward` column increase!
